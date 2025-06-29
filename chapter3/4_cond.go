@@ -9,8 +9,8 @@ func main() {
 	var wg sync.WaitGroup
 	size := 10
 	wg.Add(size)
-	list := make([]struct{}, 0, 10)
-	cond := sync.Cond{L: &sync.Mutex{}}
+	list := make([]struct{}, 0, size)
+	cond := sync.NewCond(&sync.Mutex{})
 
 	pop := func() {
 		defer func() {
