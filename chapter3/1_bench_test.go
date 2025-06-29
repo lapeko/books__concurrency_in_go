@@ -6,7 +6,7 @@ import (
 )
 
 func BenchmarkMyContextSwitch(b *testing.B) {
-	wg := sync.WaitGroup{}
+	var wg sync.WaitGroup
 	wg.Add(2)
 	startCh, senderReceiver := make(chan struct{}), make(chan struct{})
 
