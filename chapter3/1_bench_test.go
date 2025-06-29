@@ -5,31 +5,31 @@ import (
 	"testing"
 )
 
-func runSender(start <-chan struct{}, send chan<- struct{}, wg *sync.WaitGroup, size int) {
-	defer wg.Done()
-	<-start
-	for i := 0; i < size; i++ {
-		send <- struct{}{}
-	}
-}
-
-func runReceiver(start <-chan struct{}, receive <-chan struct{}, wg *sync.WaitGroup, size int) {
-	defer wg.Done()
-	<-start
-	for i := 0; i < size; i++ {
-		<-receive
-	}
-}
-
 func BenchmarkMyContextSwitch(b *testing.B) {
 	wg := sync.WaitGroup{}
 	wg.Add(2)
-	start, senderReceiver := make(chan struct{}), make(chan struct{})
+	startCh, senderReceiver := make(chan struct{}), make(chan struct{})
 
-	go runSender(start, senderReceiver, &wg, b.N)
-	go runReceiver(start, senderReceiver, &wg, b.N)
+	runSender := func() {
+		defer wg.Done()
+		<-startCh
+		for i := 0; i < b.N; i++ {
+			senderReceiver <- struct{}{}
+		}
+	}
+
+	runReceiver := func() {
+		defer wg.Done()
+		<-startCh
+		for i := 0; i < b.N; i++ {
+			<-senderReceiver
+		}
+	}
+
+	go runSender()
+	go runReceiver()
 
 	b.ResetTimer()
-	close(start)
+	close(startCh)
 	wg.Wait()
 }
