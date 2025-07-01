@@ -17,15 +17,11 @@ func tee(in <-chan int) (<-chan int, <-chan int) {
 		}()
 
 		for num := range in {
-			var out1, out2 = out1, out2
-			for i := 0; i < 2; i++ {
-				select {
-				case out1 <- num:
-					out1 = nil
-				case out2 <- num:
-					out2 = nil
-				}
-			}
+			var wg sync.WaitGroup
+			wg.Add(2)
+			go func() { out1 <- num; wg.Done() }()
+			go func() { out2 <- num; wg.Done() }()
+			wg.Wait()
 		}
 	}()
 
